@@ -4,6 +4,9 @@ import requests
 import base64
 import urllib
 
+# Authentication Steps, paramaters, and responses are defined at https://developer.spotify.com/web-api/authorization-guide/
+# Visit this url to see all the steps, parameters, and expected response.
+
 
 app = Flask(__name__)
 
@@ -23,7 +26,7 @@ SPOTIFY_API_URL = "{}/{}".format(SPOTIFY_API_BASE_URL, API_VERSION)
 CLIENT_SIDE_URL = "http://127.0.0.1"
 PORT = 8080
 REDIRECT_URI = "{}:{}/callback/q".format(CLIENT_SIDE_URL, PORT)
-SCOPE = "playlist-modify-public playlist-modify-private"
+SCOPE = "user-read-currently-playing"
 STATE = ""
 SHOW_DIALOG_bool = True
 SHOW_DIALOG_str = str(SHOW_DIALOG_bool).lower()
@@ -68,3 +71,21 @@ def callback():
 
     # Auth Step 6: Use the access token to access Spotify API
     authorization_header = {"Authorization":"Bearer {}".format(access_token)}
+
+    # Get profile data
+    user_profile_api_endpoint = "{}/me".format(SPOTIFY_API_URL)
+    profile_response = requests.get(user_profile_api_endpoint, headers=authorization_header)
+    profile_data = json.loads(profile_response.text)
+
+    # Get user playlist data
+    playlist_api_endpoint = "{}/playlists".format(profile_data["href"])
+    playlists_response = requests.get(playlist_api_endpoint, headers=authorization_header)
+    playlist_data = json.loads(playlists_response.text)
+
+    # Combine profile and playlist data to display
+    display_arr = [profile_data] + playlist_data["items"]
+    return render_template("index.html",sorted_array=display_arr)
+
+
+if __name__ == "__main__":
+    app.run(debug=True,port=PORT)

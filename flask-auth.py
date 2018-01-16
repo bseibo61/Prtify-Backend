@@ -29,7 +29,6 @@ SPOTIFY_API_URL = "{}/{}".format(SPOTIFY_API_BASE_URL, API_VERSION)
 CLIENT_SIDE_URL = "http://127.0.0.1"
 PORT = 8080
 REDIRECT_URI = "{}:{}/callback/q".format(CLIENT_SIDE_URL, PORT)
-SCOPE = "playlist-modify-public playlist-modify-private"
 STATE = ""
 SHOW_DIALOG_bool = True
 SHOW_DIALOG_str = str(SHOW_DIALOG_bool).lower()
@@ -38,7 +37,7 @@ SHOW_DIALOG_str = str(SHOW_DIALOG_bool).lower()
 auth_query_parameters = {
     "response_type": "code",
     "redirect_uri": REDIRECT_URI,
-    "scope": SCOPE,
+    "scope": scope,
     # "state": STATE,
     # "show_dialog": SHOW_DIALOG_str,
     "client_id": client_id
@@ -47,10 +46,11 @@ auth_query_parameters = {
 @app.route("/")
 def index():
     # Auth Step 1: Authorization
-    url_args = "&".join(["{}={}".format(key,urllib.quote(val)) for key,val in auth_query_parameters.iteritems()])
-    auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
-    return redirect(auth_url)
+    # url_args = "&".join(["{}={}".format(key,urllib.quote(val)) for key,val in auth_query_parameters.iteritems()])
+    # auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
+    token = util.prompt_for_user_token("crimefightingcoconut","user-read-currently-playing",client_id="a843addfdfca4298ae0d7abb074e5c94",client_secret="7062c3bbd0a34b3697bf4bff1680f272",redirect_uri="http://127.0.0.1:8080/callback/")
 
+    return redirect(token)
 
 @app.route("/callback/q")
 def callback():
@@ -61,7 +61,7 @@ def callback():
         "code": str(auth_token),
         "redirect_uri": REDIRECT_URI
     }
-    base64encoded = base64.b64encode("{}:{}".format(client_id, client_secret))
+    base64encoded = base64.b64encode("{}:{}".format(CLIENT_ID, CLIENT_SECRET))
     headers = {"Authorization": "Basic {}".format(base64encoded)}
     post_request = requests.post(SPOTIFY_TOKEN_URL, data=code_payload, headers=headers)
 
@@ -74,3 +74,20 @@ def callback():
 
     # Auth Step 6: Use the access token to access Spotify API
     authorization_header = {"Authorization":"Bearer {}".format(access_token)}
+
+    # Get profile data
+    user_profile_api_endpoint = "{}/me".format(SPOTIFY_API_URL)
+    profile_response = requests.get(user_profile_api_endpoint, headers=authorization_header)
+    profile_data = json.loads(profile_response.text)
+
+    # Get user playlist data
+    playlist_api_endpoint = "{}/playlists".format(profile_data["href"])
+    playlists_response = requests.get(playlist_api_endpoint, headers=authorization_header)
+    playlist_data = json.loads(playlists_response.text)
+
+    # Combine profile and playlist data to display
+    display_arr = [profile_data] + playlist_data["items"]
+    return render_template("index.html",sorted_array=display_arr)
+
+if __name__ == "__main__":
+    app.run(debug=True,port=PORT)
