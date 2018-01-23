@@ -72,6 +72,10 @@ def callback():
     # Auth Step 6: Use the access token to access Spotify API
     authorization_header = {"Authorization":"Bearer {}".format(access_token)}
 
+    r = requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header)
+    request_data = json.loads(r.text)
+    print json.dumps(request_data, indent=4, sort_keys=True)
+
     # Get profile data
     user_profile_api_endpoint = "{}/me".format(SPOTIFY_API_URL)
     profile_response = requests.get(user_profile_api_endpoint, headers=authorization_header)
@@ -83,8 +87,7 @@ def callback():
     playlist_data = json.loads(playlists_response.text)
 
     # Combine profile and playlist data to display
-    display_arr = [profile_data] + playlist_data["items"]
-    return render_template("index.html",sorted_array=display_arr)
+    return render_template("index.html",sorted_array=[request_data])
 
 
 if __name__ == "__main__":
