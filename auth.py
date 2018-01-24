@@ -26,7 +26,7 @@ SPOTIFY_API_URL = "{}/{}".format(SPOTIFY_API_BASE_URL, API_VERSION)
 CLIENT_SIDE_URL = "http://127.0.0.1"
 PORT = 8080
 REDIRECT_URI = "{}:{}/callback/q".format(CLIENT_SIDE_URL, PORT)
-SCOPE = "user-read-currently-playing"
+SCOPE = "user-modify-playback-state user-read-currently-playing"
 STATE = ""
 SHOW_DIALOG_bool = True
 SHOW_DIALOG_str = str(SHOW_DIALOG_bool).lower()
@@ -44,7 +44,6 @@ auth_query_parameters = {
 @app.route("/")
 def index():
     # Auth Step 1: Authorization
-    print(urllib.parse.quote(val))
     url_args = "&".join(["{}={}".format(key,urllib.parse.quote(val)) for key,val in auth_query_parameters.items()])
     auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
     return redirect(auth_url)
@@ -59,7 +58,8 @@ def callback():
         "code": str(auth_token),
         "redirect_uri": REDIRECT_URI
     }
-    base64encoded = base64.b64encode("{}:{}".format(CLIENT_ID, CLIENT_SECRET))
+    notbase64 = "{}:{}".format(CLIENT_ID, CLIENT_SECRET).encode()
+    base64encoded = base64.standard_b64encode(notbase64).decode()
     headers = {"Authorization": "Basic {}".format(base64encoded)}
     post_request = requests.post(SPOTIFY_TOKEN_URL, data=code_payload, headers=headers)
 
@@ -75,17 +75,26 @@ def callback():
 
     r = requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header)
     request_data = json.loads(r.text)
-    print(json.dumps(request_data, indent=4, sort_keys=True))
+    # print(json.dumps(request_data, indent=4, sort_keys=True))
 
     # Get profile data
-    user_profile_api_endpoint = "{}/me".format(SPOTIFY_API_URL)
-    profile_response = requests.get(user_profile_api_endpoint, headers=authorization_header)
-    profile_data = json.loads(profile_response.text)
-
+    # user_profile_api_endpoint = "{}/me".format(SPOTIFY_API_URL)
+    # profile_response = requests.get(user_profile_api_endpoint, headers=authorization_header)
+    # profile_data = json.loads(profile_response.text)
+    #
     # Get user playlist data
-    playlist_api_endpoint = "{}/playlists".format(profile_data["href"])
-    playlists_response = requests.get(playlist_api_endpoint, headers=authorization_header)
-    playlist_data = json.loads(playlists_response.text)
+    # playlist_api_endpoint = "{}/playlists".format(profile_data["href"])
+    # playlists_response = requests.get(playlist_api_endpoint, headers=authorization_header)
+    # playlist_data = json.loads(playlists_response.text)
+
+    #play some jimi
+    context_uri = {}
+    context_uri["uris"] = ["spotify:track:21yRtB6B8EMounImAfHRCP"]
+    json_uri = json.dumps(context_uri)
+    play = requests.put('https://api.spotify.com/v1/me/player/play',headers=authorization_header,data=json_uri)
+    # play_data = json.loads(play.text)
+    print(play.text)
+    # print(json.dumps(play_data, indent=4, sort_keys=True))
 
     # Combine profile and playlist data to display
     return render_template("index.html",sorted_array=[request_data])
