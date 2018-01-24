@@ -2,7 +2,7 @@ import json
 from flask import Flask, request, redirect, g, render_template
 import requests
 import base64
-import urllib
+import urllib.parse
 
 # Authentication Steps, paramaters, and responses are defined at https://developer.spotify.com/web-api/authorization-guide/
 # Visit this url to see all the steps, parameters, and expected response.
@@ -44,7 +44,8 @@ auth_query_parameters = {
 @app.route("/")
 def index():
     # Auth Step 1: Authorization
-    url_args = "&".join(["{}={}".format(key,urllib.quote(val)) for key,val in auth_query_parameters.iteritems()])
+    print(urllib.parse.quote(val))
+    url_args = "&".join(["{}={}".format(key,urllib.parse.quote(val)) for key,val in auth_query_parameters.items()])
     auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
     return redirect(auth_url)
 
@@ -74,7 +75,7 @@ def callback():
 
     r = requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header)
     request_data = json.loads(r.text)
-    print json.dumps(request_data, indent=4, sort_keys=True)
+    print(json.dumps(request_data, indent=4, sort_keys=True))
 
     # Get profile data
     user_profile_api_endpoint = "{}/me".format(SPOTIFY_API_URL)
