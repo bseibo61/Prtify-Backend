@@ -3,6 +3,7 @@ from flask import Flask, request, redirect, g, render_template
 import requests
 import base64
 import urllib.parse
+import time
 
 # Authentication Steps, paramaters, and responses are defined at https://developer.spotify.com/web-api/authorization-guide/
 # Visit this url to see all the steps, parameters, and expected response.
@@ -73,31 +74,49 @@ def callback():
     # Auth Step 6: Use the access token to access Spotify API
     authorization_header = {"Authorization":"Bearer {}".format(access_token)}
 
-    r = requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header)
-    request_data = json.loads(r.text)
-    # print(json.dumps(request_data, indent=4, sort_keys=True))
+    # play_song("Giant","Pond", authorization_header)
 
-    # Get profile data
-    # user_profile_api_endpoint = "{}/me".format(SPOTIFY_API_URL)
-    # profile_response = requests.get(user_profile_api_endpoint, headers=authorization_header)
-    # profile_data = json.loads(profile_response.text)
-    #
-    # Get user playlist data
-    # playlist_api_endpoint = "{}/playlists".format(profile_data["href"])
-    # playlists_response = requests.get(playlist_api_endpoint, headers=authorization_header)
-    # playlist_data = json.loads(playlists_response.text)
-
-    #play some jimi
-    context_uri = {}
-    context_uri["uris"] = ["spotify:track:21yRtB6B8EMounImAfHRCP"]
-    json_uri = json.dumps(context_uri)
-    play = requests.put('https://api.spotify.com/v1/me/player/play',headers=authorization_header,data=json_uri)
-    # play_data = json.loads(play.text)
-    print(play.text)
-    # print(json.dumps(play_data, indent=4, sort_keys=True))
 
     # Combine profile and playlist data to display
     return render_template("index.html",sorted_array=[request_data])
+
+def getTime(authorization_header):
+    request_json = json.loads(requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header))
+
+
+
+    sleeper(time/1000,authorization_header)
+
+def sleeper(s,authorization_header):
+    try:
+        print("first")
+        num = float(s)
+        time.sleep(num)
+        play_song("Hello","",authorization_header)
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt")
+        exit()
+
+def play_song(track, artist, authorization_header):
+    # gets song id from artist and track
+    track_url ="https://api.spotify.com/v1/search?q=track%3A{}".format(track)+"+artist%3"+"A{}&type=track&limit=1".format(artist)
+    track_json = json.loads(requests.get(track_url,headers=authorization_header).text)
+    song_uri = track_json["tracks"]["items"][0]["uri"]
+    # put top result on playback
+    context_uri = {}
+    context_uri["uris"] = [song_uri]
+    json_uri = json.dumps(context_uri)
+    play = requests.put('https://api.spotify.com/v1/me/player/play',headers=authorization_header,data=json_uri)
+
+# removes other charactors from last fm for url query
+def letters(input):
+    valids = []
+    for character in input:
+        if character.isalpha():
+            valids.append(character)
+        elif character == ' ':
+            valids.append('+')
+    return ''.join(valids)
 
 
 if __name__ == "__main__":
