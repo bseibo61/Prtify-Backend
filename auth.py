@@ -75,16 +75,17 @@ def callback():
     authorization_header = {"Authorization":"Bearer {}".format(access_token)}
 
     # play_song("Giant","Pond", authorization_header)
-
+    request_data = ["test"]
+    getTime(authorization_header)
 
     # Combine profile and playlist data to display
     return render_template("index.html",sorted_array=[request_data])
 
 def getTime(authorization_header):
-    request_json = json.loads(requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header))
-
-
-
+    request_json = json.loads(requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header).text)
+    track_json = json.loads(requests.get(track_url,headers=authorization_header).text)
+    song_uri = track_json["tracks"]["items"][0]["uri"]
+    print(song_uri)
     sleeper(time/1000,authorization_header)
 
 def sleeper(s,authorization_header):
