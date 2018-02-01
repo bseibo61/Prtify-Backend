@@ -8,6 +8,8 @@ name = "pypi"
 [packages]
 
 requests = "*"
+flask = "*"
+firebase-admin = "*"
 
 
 [dev-packages]

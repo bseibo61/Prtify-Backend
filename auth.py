@@ -10,13 +10,14 @@ from firebase_admin import credentials
 
 # Authentication Steps, paramaters, and responses are defined at https://developer.spotify.com/web-api/authorization-guide/
 # Visit this url to see all the steps, parameters, and expected response.
-
+cred = credentials.Cert('path/to/serviceKey.json')
+firebase_admin.initialize_app(cred, {
+    'databaseURL' : 'https://voteify.firebaseio.com/'
+})
 
 app = Flask(__name__)
 
 #  Client Keys
-# CLIENT_ID = "a843addfdfca4298ae0d7abb074e5c94"
-# CLIENT_SECRET = "7062c3bbd0a34b3697bf4bff1680f272"
 CLIENT_ID = config.CLIENT_ID
 CLIENT_SECRET = config.CLIENT_SECRET
 
