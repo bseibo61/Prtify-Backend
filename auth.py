@@ -75,25 +75,25 @@ def callback():
     authorization_header = {"Authorization":"Bearer {}".format(access_token)}
 
     # play_song("Giant","Pond", authorization_header)
-    request_data = ["test"]
-    getTime(authorization_header)
 
+    request_data = ["stuff"]
+    getTime(authorization_header)
     # Combine profile and playlist data to display
     return render_template("index.html",sorted_array=[request_data])
 
 def getTime(authorization_header):
-    request_json = json.loads(requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header).text)
-    track_json = json.loads(requests.get(track_url,headers=authorization_header).text)
-    song_uri = track_json["tracks"]["items"][0]["uri"]
-    print(song_uri)
-    sleeper(time/1000,authorization_header)
+    curr_json = json.loads(requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header).text)
+    print("THIS IS THE REQUEST JSON ",curr_json['item']['duration_ms'])
+    duration_ms = curr_json['item']['duration_ms']
+    progress_ms = curr_json['progress_ms']
+    sleeper((duration_ms-progress_ms)/1000,authorization_header)
 
 def sleeper(s,authorization_header):
     try:
-        print("first")
+        print("first",s)
         num = float(s)
         time.sleep(num)
-        play_song("Hello","",authorization_header)
+        play_song("The Only Thing","Sufjan Stevens",authorization_header)
     except KeyboardInterrupt:
         print("KeyboardInterrupt")
         exit()
@@ -108,7 +108,7 @@ def play_song(track, artist, authorization_header):
     context_uri["uris"] = [song_uri]
     json_uri = json.dumps(context_uri)
     play = requests.put('https://api.spotify.com/v1/me/player/play',headers=authorization_header,data=json_uri)
-
+    getTime(authorization_header)
 # removes other charactors from last fm for url query
 def letters(input):
     valids = []
