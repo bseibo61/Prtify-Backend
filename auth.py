@@ -4,6 +4,9 @@ import requests
 import base64
 import urllib.parse
 import time
+import firebase_admin
+import config
+from firebase_admin import credentials
 
 # Authentication Steps, paramaters, and responses are defined at https://developer.spotify.com/web-api/authorization-guide/
 # Visit this url to see all the steps, parameters, and expected response.
@@ -12,8 +15,10 @@ import time
 app = Flask(__name__)
 
 #  Client Keys
-CLIENT_ID = "a843addfdfca4298ae0d7abb074e5c94"
-CLIENT_SECRET = "7062c3bbd0a34b3697bf4bff1680f272"
+# CLIENT_ID = "a843addfdfca4298ae0d7abb074e5c94"
+# CLIENT_SECRET = "7062c3bbd0a34b3697bf4bff1680f272"
+CLIENT_ID = config.CLIENT_ID
+CLIENT_SECRET = config.CLIENT_SECRET
 
 # Spotify URLS
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
@@ -74,13 +79,12 @@ def callback():
     # Auth Step 6: Use the access token to access Spotify API
     authorization_header = {"Authorization":"Bearer {}".format(access_token)}
 
-    # play_song("Giant","Pond", authorization_header)
-
     request_data = ["stuff"]
-    getTime(authorization_header)
-    # Combine profile and playlist data to display
+    # getTime(authorization_header)
     return render_template("index.html",sorted_array=[request_data])
 
+# finds the ammount of time left until the currently playing song ends and passes
+# it to the slepper function
 def getTime(authorization_header):
     curr_json = json.loads(requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header).text)
     print("THIS IS THE REQUEST JSON ",curr_json['item']['duration_ms'])
@@ -88,6 +92,7 @@ def getTime(authorization_header):
     progress_ms = curr_json['progress_ms']
     sleeper((duration_ms-progress_ms)/1000,authorization_header)
 
+# waits for the given time then calls to play the next song
 def sleeper(s,authorization_header):
     try:
         print("first",s)
@@ -98,6 +103,7 @@ def sleeper(s,authorization_header):
         print("KeyboardInterrupt")
         exit()
 
+# needs to grab song from firebase then put it in playback
 def play_song(track, artist, authorization_header):
     # gets song id from artist and track
     track_url ="https://api.spotify.com/v1/search?q=track%3A{}".format(track)+"+artist%3"+"A{}&type=track&limit=1".format(artist)
