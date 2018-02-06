@@ -6,17 +6,7 @@ import urllib.parse
 import time
 import config
 import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import db
-
-cred = credentials.Certificate('voteify-firebase-adminsdk-awpcw-626c190ca1.json')
-default_app = firebase_admin.initialize_app(cred, {
-    'databaseURL' : 'https://voteify.firebaseio.com/'
-})
-
-root = db.reference()
-temp = root.get()
-print(temp['parties']['boy'])
+from firebase_admin import credentials, db
 
 app = Flask(__name__)
 
@@ -50,6 +40,19 @@ auth_query_parameters = {
     # "show_dialog": SHOW_DIALOG_str,
     "client_id": CLIENT_ID
 }
+
+cred = credentials.Certificate('voteify-firebase-adminsdk-awpcw-626c190ca1.json')
+default_app = firebase_admin.initialize_app(cred, {
+    'databaseURL' : 'https://voteify.firebaseio.com/'
+})
+
+# pull from requests and put in queue
+def request_to_queue():
+    root = db.reference()
+    temp = root.get()
+    print(temp['parties']['boy'])
+
+request_to_queue()
 
 @app.route("/")
 def index():
@@ -128,6 +131,9 @@ def letters(input):
         elif character == ' ':
             valids.append('+')
     return ''.join(valids)
+
+
+
 
 
 if __name__ == "__main__":
