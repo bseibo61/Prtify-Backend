@@ -4,16 +4,19 @@ import requests
 import base64
 import urllib.parse
 import time
-import firebase_admin
 import config
+import firebase_admin
 from firebase_admin import credentials
+from firebase_admin import db
 
-# Authentication Steps, paramaters, and responses are defined at https://developer.spotify.com/web-api/authorization-guide/
-# Visit this url to see all the steps, parameters, and expected response.
-cred = credentials.Cert('path/to/serviceKey.json')
-firebase_admin.initialize_app(cred, {
+cred = credentials.Certificate('voteify-firebase-adminsdk-awpcw-626c190ca1.json')
+default_app = firebase_admin.initialize_app(cred, {
     'databaseURL' : 'https://voteify.firebaseio.com/'
 })
+
+root = db.reference()
+temp = root.get()
+print(temp['parties']['boy'])
 
 app = Flask(__name__)
 
