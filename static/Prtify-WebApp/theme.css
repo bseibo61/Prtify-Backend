@@ -1,0 +1,23 @@
+body{
+  background-color: #37474f;
+}
+
+#header{
+  text-align: center;
+  font-size: 100px;
+  font-weight: bold;
+  color: white;
+}
+
+input, select, textarea {
+    color: white;
+    font-weight: bold;
+}
+
+/*#searchButton {*/
+    /*margin:0 auto;*/
+    /*display:block;*/
+/*}*/
+
+#element1 {display:inline-block;margin-right:10px;}
+#element2 {display:inline-block;}

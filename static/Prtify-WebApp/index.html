@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Partify</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="materialize.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  <script src="https://www.gstatic.com/firebasejs/4.6.1/firebase.js"></script>
+  <script>
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyCZ3w0ZNgOJrzJW4S8c1mP9D4w5IqgtFLc",
+      authDomain: "voteify.firebaseapp.com",
+      databaseURL: "https://voteify.firebaseio.com",
+      projectId: "voteify",
+      storageBucket: "voteify.appspot.com",
+      messagingSenderId: "1040804533110"
+    };
+    firebase.initializeApp(config);
+  </script>
+</head>
+
+<body>
+  <div>
+    <h1 id="header">Prtify</h1>
+    <h6 class="center white-text">Lets everyone have a say in what to play!</h6>
+
+
+    <div class="row" style="padding-top: 100px">
+      <form class="col s12">
+        <div class="row">
+          <div class="input-field col s4 offset-s4">
+            <input placeholder="Party Name" autocomplete="off" id="partyName" type="text" class="validate center">
+          </div>
+        </div>
+        <div class="row">
+          <div class="center">
+            <button class="btn waves-effect waves-light" type="submit" name="action" onclick="joinParty()">Join Party</button>
+            <button class="btn waves-effect waves-light" type="submit" onclick="createParty()">Create Party</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="anonAuth.js"></script>
+  <script src="index.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="materialize.min.js"></script>
+</body>
+
+
+</html>

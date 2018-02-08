@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Partify</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon15.png">
+  <link rel="viewport" type="text/css" href="main.css">
+  <link href="materialize.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  <script src="https://www.gstatic.com/firebasejs/4.6.1/firebase.js"></script>
+  <script>
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyCZ3w0ZNgOJrzJW4S8c1mP9D4w5IqgtFLc",
+      authDomain: "voteify.firebaseapp.com",
+      databaseURL: "https://voteify.firebaseio.com",
+      projectId: "voteify",
+      storageBucket: "voteify.appspot.com",
+      messagingSenderId: "1040804533110"
+    };
+    firebase.initializeApp(config);
+  </script>
+</head>
+<header>
+  <nav class="teal accent-4 hide-on-med-and-down">
+    <div class="nav-wrapper">
+      <a href="#!" class="brand-logo"><i class="material-icons">stars</i>Prtify</a>
+    </div>
+  </nav>
+
+  <nav class="hide-on-med-and-up teal accent-4">
+    <ul>
+      <li>
+        <div>
+          <a href="#!" class="brand-logo"><i class="material-icons">stars</i>Prtify</a>
+          <a class='dropdown-button' href='#' data-activates='dropdown1'><i class="material-icons">menu</i></a>
+        </div>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<body>
+  <div class="container">
+      <nav class="transparent z-depth-0">
+          <div class="nav-wrapper">
+              <form action="" method="POST" id="searchForm">
+                  <div class="input-field col s6 offset-s2">
+                      <input id="search" type="search" required autocomplete="off">
+                      <label class="label-icon" for="search"><i class="material-icons">search</i></label>
+                      <i class="material-icons">close</i>
+                      <input type="submit" form="searchForm" style="display: none" value="submit">
+                  </div>
+              </form>
+          </div>
+      </nav>
+  </div>
+  <div class="container">
+    <h2 class="center white-text" id="headerQueue">Queue</h2>
+    <ul class="collection" id="queue">
+    </ul>
+  </div>
+
+  <!-- Modal Structure -->
+  <div id="modal1" class="modal">
+    <div class="modal-content">
+    </div>
+    <h4 style="padding-left: 20px">Results</h4>
+    <div id="result">
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="materialize.min.js"></script>
+  <script src="modalandToast.js"></script>
+  <script type="text/javascript" src="main.js"></script>
+  <script type="text/javascript" src="lastfmSearch.js"></script>
+
+</body>
+
+</html>
