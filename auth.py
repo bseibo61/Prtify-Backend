@@ -41,7 +41,7 @@ auth_query_parameters = {
     "client_id": CLIENT_ID
 }
 
-cred = credentials.Certificate('voteify-firebase-adminsdk-awpcw-626c190ca1.json')
+cred = credentials.Certificate('voteify-firebase-adminsdk-awpcw-fb67cf1ed7.json')
 default_app = firebase_admin.initialize_app(cred, {
     'databaseURL' : 'https://voteify.firebaseio.com/'
 })
@@ -50,7 +50,7 @@ default_app = firebase_admin.initialize_app(cred, {
 def request_to_queue():
     root = db.reference()
     temp = root.get()
-    print(temp['parties']['boy'])
+    # print(temp['parties']['boy'])
 
 request_to_queue()
 
@@ -74,10 +74,12 @@ def callback():
     notbase64 = "{}:{}".format(CLIENT_ID, CLIENT_SECRET).encode()
     base64encoded = base64.standard_b64encode(notbase64).decode()
     headers = {"Authorization": "Basic {}".format(base64encoded)}
+    print(headers)
     post_request = requests.post(SPOTIFY_TOKEN_URL, data=code_payload, headers=headers)
 
     # Auth Step 5: Tokens are Returned to Application
     response_data = json.loads(post_request.text)
+    print(response_data)
     access_token = response_data["access_token"]
     refresh_token = response_data["refresh_token"]
     token_type = response_data["token_type"]

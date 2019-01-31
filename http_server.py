@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# This works when opened up on localhost:8080 but not with the frontend
+# got it from here https://gist.github.com/shieldwed/0312c39fa486912060c68bfd314f2393
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # HTTPRequestHandler class
@@ -20,6 +22,7 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
         send_file = open("hi.html", "r")
         self.wfile.write(bytes(send_file.read(), "utf8"))
         return
+
 
 def run():
   print('starting server...')
