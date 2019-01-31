@@ -7,7 +7,8 @@ import time
 import config
 import firebase_admin
 from firebase_admin import credentials, db
-from multiprocessing import Process, Value
+from multiprocessing import Process, Value, Manager
+from ctypes import c_char_p
 
 app = Flask(__name__)
 
@@ -32,8 +33,10 @@ STATE = ""
 SHOW_DIALOG_bool = True
 SHOW_DIALOG_str = str(SHOW_DIALOG_bool).lower()
 
-authorization_header = None
-
+manager = Manager()
+authorization_header = manager.Value(c_char_p, "")
+# authorization_header = Value('c',"")
+test = None
 
 auth_query_parameters = {
     "response_type": "code",
@@ -62,6 +65,8 @@ def index():
     # Auth Step 1: Authorization
     url_args = "&".join(["{}={}".format(key,urllib.parse.quote(val)) for key,val in auth_query_parameters.items()])
     auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
+    global test
+    test = "testA"
     return redirect(auth_url)
 
 
@@ -90,8 +95,11 @@ def callback():
 
     # Auth Step 6: Use the access token to access Spotify API
     global authorization_header
-    authorization_header = {"Authorization":"Bearer {}".format(access_token)}
-    print("AUTH HEADER IS ",authorization_header)
+    authorization_header.value = {"Authorization":"Bearer {}".format(access_token)}
+    print("AUTH HEADER IS ",authorization_header.value)
+
+    global test
+    print(test)
 
     request_data = ["stuff"]
     print("REDIRECT")
@@ -102,45 +110,44 @@ def callback():
 
 # finds the ammount of time left until the currently playing song ends and passes
 # it to the slepper function
-def getTime(authorization_header):
-    curr_json = json.loads(requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header).text)
+def getTime():
+    curr_json = json.loads(requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header.value).text)
     print("THIS IS THE REQUEST JSON ",curr_json['item']['duration_ms'])
     duration_ms = curr_json['item']['duration_ms']
     progress_ms = curr_json['progress_ms']
-    sleeper((duration_ms-progress_ms)/1000,authorization_header)
+    sleeper((duration_ms-progress_ms)/1000)
 
 # waits for the given time then calls to play the next song
-def sleeper(s,authorization_header):
+def sleeper(s):
     try:
         print("first",s)
         num = float(s)
         time.sleep(num)
-        play_song("The Only Thing","Sufjan Stevens",authorization_header)
+        play_song("The Only Thing","Sufjan Stevens")
     except KeyboardInterrupt:
         print("KeyboardInterrupt")
         exit()
 
 # needs to grab song from firebase then put it in playback
-def play_song(track, artist, authorization_header):
+def play_song(track, artist):
     # gets song id from artist and track
     track_url ="https://api.spotify.com/v1/search?q=track%3A{}".format(track)+"+artist%3"+"A{}&type=track&limit=1".format(artist)
-    track_json = json.loads(requests.get(track_url,headers=authorization_header).text)
+    track_json = json.loads(requests.get(track_url,headers=authorization_header.value).text)
     song_uri = track_json["tracks"]["items"][0]["uri"]
     # put top result on playback
     context_uri = {}
     context_uri["uris"] = [song_uri]
     json_uri = json.dumps(context_uri)
-    play = requests.put('https://api.spotify.com/v1/me/player/play',headers=authorization_header,data=json_uri)
-    getTime(authorization_header)
+    play = requests.put('https://api.spotify.com/v1/me/player/play',headers=authorization_header.value,data=json_uri)
+    getTime()
 
 # Starts running continuously as program is started, kicks off song listening loop when it gets the authorization_header
-def try_authentication():
-    global authorization_header
+def try_authentication(auth_header):
     print("try-auth called")
-    while authorization_header == None:
+    while auth_header.value == "":
         time.sleep(1)
-        print(authorization_header)
-    getTime(authorization_header)
+        print(auth_header.value)
+    getTime()
 
 
 # removes other charactors from last fm for url query
@@ -158,7 +165,7 @@ def letters(input):
 
 
 if __name__ == "__main__":
-    p = Process(target=try_authentication)
+    p = Process(target=try_authentication, args=(authorization_header,))
     p.start()  
     app.run(debug=True, use_reloader=False, port=PORT)
     p.join()
