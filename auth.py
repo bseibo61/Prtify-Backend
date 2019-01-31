@@ -7,6 +7,7 @@ import time
 import config
 import firebase_admin
 from firebase_admin import credentials, db
+from multiprocessing import Process, Value
 
 app = Flask(__name__)
 
@@ -30,6 +31,8 @@ SCOPE = "user-modify-playback-state user-read-currently-playing"
 STATE = ""
 SHOW_DIALOG_bool = True
 SHOW_DIALOG_str = str(SHOW_DIALOG_bool).lower()
+
+authorization_header = None
 
 
 auth_query_parameters = {
@@ -86,11 +89,16 @@ def callback():
     expires_in = response_data["expires_in"]
 
     # Auth Step 6: Use the access token to access Spotify API
+    global authorization_header
     authorization_header = {"Authorization":"Bearer {}".format(access_token)}
+    print("AUTH HEADER IS ",authorization_header)
 
     request_data = ["stuff"]
+    print("REDIRECT")
+    print("FINSIHED")
     # getTime(authorization_header)
-    return render_template("index.html",sorted_array=[request_data])
+    # return render_template("index.html",sorted_array=[request_data])
+    return redirect("http://benseibold.com/")
 
 # finds the ammount of time left until the currently playing song ends and passes
 # it to the slepper function
@@ -124,6 +132,17 @@ def play_song(track, artist, authorization_header):
     json_uri = json.dumps(context_uri)
     play = requests.put('https://api.spotify.com/v1/me/player/play',headers=authorization_header,data=json_uri)
     getTime(authorization_header)
+
+# Starts running continuously as program is started, kicks off song listening loop when it gets the authorization_header
+def try_authentication():
+    global authorization_header
+    print("try-auth called")
+    while authorization_header == None:
+        time.sleep(1)
+        print(authorization_header)
+    getTime(authorization_header)
+
+
 # removes other charactors from last fm for url query
 def letters(input):
     valids = []
@@ -139,4 +158,7 @@ def letters(input):
 
 
 if __name__ == "__main__":
-    app.run(debug=True,port=PORT)
+    p = Process(target=try_authentication)
+    p.start()  
+    app.run(debug=True, use_reloader=False, port=PORT)
+    p.join()
