@@ -65,8 +65,14 @@ def index():
     # Auth Step 1: Authorization
     url_args = "&".join(["{}={}".format(key,urllib.parse.quote(val)) for key,val in auth_query_parameters.items()])
     auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
-    global test
-    test = "testA"
+    return redirect(auth_url)
+
+@app.route("/auth/<party>")
+def auth(party):
+    print(party)
+    # Auth Step 1: Authorization
+    url_args = "&".join(["{}={}".format(key,urllib.parse.quote(val)) for key,val in auth_query_parameters.items()])
+    auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
     return redirect(auth_url)
 
 
@@ -96,14 +102,7 @@ def callback():
     # Auth Step 6: Use the access token to access Spotify API
     global authorization_header
     authorization_header.value = {"Authorization":"Bearer {}".format(access_token)}
-    print("AUTH HEADER IS ",authorization_header.value)
-
-    global test
-    print(test)
-
     request_data = ["stuff"]
-    print("REDIRECT")
-    print("FINSIHED")
     # getTime(authorization_header)
     # return render_template("index.html",sorted_array=[request_data])
     return redirect("http://benseibold.com/")
@@ -112,7 +111,6 @@ def callback():
 # it to the slepper function
 def getTime():
     curr_json = json.loads(requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header.value).text)
-    print("THIS IS THE REQUEST JSON ",curr_json['item']['duration_ms'])
     duration_ms = curr_json['item']['duration_ms']
     progress_ms = curr_json['progress_ms']
     sleeper((duration_ms-progress_ms)/1000)
@@ -120,7 +118,6 @@ def getTime():
 # waits for the given time then calls to play the next song
 def sleeper(s):
     try:
-        print("first",s)
         num = float(s)
         time.sleep(num)
         play_song("The Only Thing","Sufjan Stevens")
@@ -147,7 +144,8 @@ def try_authentication(auth_header):
     while auth_header.value == "":
         time.sleep(1)
         print(auth_header.value)
-    getTime()
+    print("Got auth header")
+    # getTime()
 
 
 # removes other charactors from last fm for url query
