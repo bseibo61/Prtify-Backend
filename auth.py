@@ -1,4 +1,5 @@
 import json
+import flask
 from flask import Flask, request, redirect, g, render_template
 import requests
 import base64
@@ -9,12 +10,20 @@ import firebase_admin
 from firebase_admin import credentials, db
 from multiprocessing import Process, Value, Manager
 from ctypes import c_char_p
+from firebase import firebase
+
+# Sample python-firebase code
+# See http://ozgur.github.io/python-firebase/
+firebase = firebase.FirebaseApplication('https://voteify.firebaseio.com/', None)
+result = firebase.get('/parties', None)
+print("result",result)
 
 app = Flask(__name__)
 
 #  Client Keys
 CLIENT_ID = config.CLIENT_ID
 CLIENT_SECRET = config.CLIENT_SECRET
+
 
 # Spotify URLS
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
@@ -47,32 +56,50 @@ auth_query_parameters = {
     "client_id": CLIENT_ID
 }
 
-cred = credentials.Certificate('voteify-firebase-adminsdk-awpcw-fb67cf1ed7.json')
-default_app = firebase_admin.initialize_app(cred, {
-    'databaseURL' : 'https://voteify.firebaseio.com/'
-})
+
+
+# cred = credentials.Certificate('voteify-firebase-adminsdk-awpcw-fb67cf1ed7.json')
+# default_app = firebase_admin.initialize_app(cred, {
+#     'databaseURL' : 'https://voteify.firebaseio.com/'
+# })
+
+# parties = db.reference('parties')
 
 # pull from requests and put in queue
-def request_to_queue():
-    root = db.reference()
-    temp = root.get()
+# def request_to_queue():
+    
+    # temp = root.get()
     # print(temp['parties']['boy'])
 
-request_to_queue()
+# request_to_queue()
 
 @app.route("/")
 def index():
     # Auth Step 1: Authorization
     url_args = "&".join(["{}={}".format(key,urllib.parse.quote(val)) for key,val in auth_query_parameters.items()])
     auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
+    req = flask.request.json
+    print("Request is !!!!!!!!!!!!!!!!: ",req)
     return redirect(auth_url)
 
 @app.route("/auth/<party>")
 def auth(party):
-    print(party)
+    print("Party is: ",party)
     # Auth Step 1: Authorization
     url_args = "&".join(["{}={}".format(key,urllib.parse.quote(val)) for key,val in auth_query_parameters.items()])
     auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
+
+    # Add Party to Firebase
+
+    from firebase import firebase
+
+    firebase = firebase.FirebaseApplication('https://voteify.firebaseio.com/', None)
+    # result = firebase.get('/parties', None)
+    # print("result",result)
+
+    # result = firebase.post('/parties', party, params={'print': 'pretty'}, {'name': party})
+    result = firebase.post('/parties', data={party:"data"}, params={'print': 'pretty'})
+    print("adding to firebase",result)
     return redirect(auth_url)
 
 
