@@ -56,23 +56,6 @@ auth_query_parameters = {
     "client_id": CLIENT_ID
 }
 
-
-
-# cred = credentials.Certificate('voteify-firebase-adminsdk-awpcw-fb67cf1ed7.json')
-# default_app = firebase_admin.initialize_app(cred, {
-#     'databaseURL' : 'https://voteify.firebaseio.com/'
-# })
-
-# parties = db.reference('parties')
-
-# pull from requests and put in queue
-# def request_to_queue():
-    
-    # temp = root.get()
-    # print(temp['parties']['boy'])
-
-# request_to_queue()
-
 @app.route("/")
 def index():
     # Auth Step 1: Authorization
@@ -82,23 +65,23 @@ def index():
     print("Request is !!!!!!!!!!!!!!!!: ",req)
     return redirect(auth_url)
 
-@app.route("/auth/<party>")
-def auth(party):
-    print("Party is: ",party)
+@app.route("/auth/<party>/<uid>")
+def auth(party, uid):
+    print("Party is: ",party, "uid is:",uid)
     # Auth Step 1: Authorization
     url_args = "&".join(["{}={}".format(key,urllib.parse.quote(val)) for key,val in auth_query_parameters.items()])
     auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
 
     # Add Party to Firebase
-
+    # I really don't understand why this import has to be here   
     from firebase import firebase
-
     firebase = firebase.FirebaseApplication('https://voteify.firebaseio.com/', None)
-    # result = firebase.get('/parties', None)
-    # print("result",result)
 
-    # result = firebase.post('/parties', party, params={'print': 'pretty'}, {'name': party})
-    result = firebase.post('/parties', data={party:"data"}, params={'print': 'pretty'})
+    # Add Party
+    result = firebase.patch('/parties/'+party+'/', {'name': party, 'users': []})
+    # Adds uid to users
+    firebase.patch('/parties/'+party+'/users/'+uid+'/', {'uid': uid} )
+
     print("adding to firebase",result)
     return redirect(auth_url)
 
@@ -184,10 +167,6 @@ def letters(input):
         elif character == ' ':
             valids.append('+')
     return ''.join(valids)
-
-
-
-
 
 if __name__ == "__main__":
     p = Process(target=try_authentication, args=(authorization_header,))
