@@ -9,7 +9,17 @@ body{
   color: white;
 }
 
-input, select, textarea {
+#invalidParty{
+  color: red;
+  display: none;
+}
+
+#existingParty{
+  color: red;
+  display: none;
+}
+
+select, textarea {
     color: white;
     font-weight: bold;
 }

@@ -1,6 +1,6 @@
 import json
 import flask
-from flask import Flask, request, redirect, g, render_template
+from flask import Flask, request, redirect, g, render_template, url_for
 import requests
 import base64
 import urllib.parse
@@ -19,6 +19,9 @@ result = firebase.get('/parties', None)
 print("result",result)
 
 app = Flask(__name__)
+
+# remove this line when done serving static files
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 #  Client Keys
 CLIENT_ID = config.CLIENT_ID
@@ -58,12 +61,13 @@ auth_query_parameters = {
 
 @app.route("/")
 def index():
-    # Auth Step 1: Authorization
-    url_args = "&".join(["{}={}".format(key,urllib.parse.quote(val)) for key,val in auth_query_parameters.items()])
-    auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
-    req = flask.request.json
-    print("Request is !!!!!!!!!!!!!!!!: ",req)
-    return redirect(auth_url)
+    return redirect(url_for("static",filename="Prtify-WebApp/index.html"))
+#     # Auth Step 1: Authorization
+#     url_args = "&".join(["{}={}".format(key,urllib.parse.quote(val)) for key,val in auth_query_parameters.items()])
+#     auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
+#     req = flask.request.json
+#     print("Request is !!!!!!!!!!!!!!!!: ",req)
+#     return redirect(auth_url)
 
 @app.route("/auth/<party>/<uid>")
 def auth(party, uid):
@@ -81,6 +85,8 @@ def auth(party, uid):
     result = firebase.patch('/parties/'+party+'/', {'name': party, 'users': []})
     # Adds uid to users
     firebase.patch('/parties/'+party+'/users/'+uid+'/', {'uid': uid} )
+    # add party to user info
+    firebase.patch('/users/'+uid+'/', {'party': party})
 
     print("adding to firebase",result)
     return redirect(auth_url)
@@ -113,29 +119,46 @@ def callback():
     global authorization_header
     authorization_header.value = {"Authorization":"Bearer {}".format(access_token)}
     request_data = ["stuff"]
-    # getTime(authorization_header)
-    # return render_template("index.html",sorted_array=[request_data])
-    return redirect("http://benseibold.com/")
+
+    # Trying to start a different thread
+    # https://stackoverflow.com/questions/35616639/python-multiprocessing-in-flask
+    global p
+    p = Process(target=sleeper, args=(100,))
+    p.start()
+
+    # sleeper(100)
+
+    # This will need to change to the address of the flask server
+    # return redirect(url_for("static",filename="Prtify-WebApp/main.html"))
+    return redirect("http://localhost:5000/main.html")
 
 # finds the ammount of time left until the currently playing song ends and passes
 # it to the slepper function
 def getTime():
-    curr_json = json.loads(requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header.value).text)
-    duration_ms = curr_json['item']['duration_ms']
-    progress_ms = curr_json['progress_ms']
-    sleeper((duration_ms-progress_ms)/1000)
+    print("requests is:",requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header.value).status_code)
+    # Check if there even is a song playing 
+    if requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header.value).status_code == 204:
+        print("No song playing yet")
+        sleeper(10)
+    else:
+        curr_json = json.loads(requests.get("https://api.spotify.com/v1/me/player/currently-playing",headers=authorization_header.value).text)
+        duration_ms = curr_json['item']['duration_ms']
+        progress_ms = curr_json['progress_ms']
+        sleeper((duration_ms-progress_ms)/1000)
 
 # waits for the given time then calls to play the next song
 def sleeper(s):
     try:
         num = float(s)
         time.sleep(num)
+        print("Restarting Test Sufjan")
         play_song("The Only Thing","Sufjan Stevens")
     except KeyboardInterrupt:
         print("KeyboardInterrupt")
         exit()
 
 # needs to grab song from firebase then put it in playback
+# Note: song will only play if spotfy is already playing
 def play_song(track, artist):
     # gets song id from artist and track
     track_url ="https://api.spotify.com/v1/search?q=track%3A{}".format(track)+"+artist%3"+"A{}&type=track&limit=1".format(artist)
@@ -146,6 +169,7 @@ def play_song(track, artist):
     context_uri["uris"] = [song_uri]
     json_uri = json.dumps(context_uri)
     play = requests.put('https://api.spotify.com/v1/me/player/play',headers=authorization_header.value,data=json_uri)
+    print("PLAY SONG!!")
     getTime()
 
 # Starts running continuously as program is started, kicks off song listening loop when it gets the authorization_header
@@ -155,7 +179,7 @@ def try_authentication(auth_header):
         time.sleep(1)
         print(auth_header.value)
     print("Got auth header")
-    # getTime()
+    getTime()
 
 
 # removes other charactors from last fm for url query
@@ -168,6 +192,7 @@ def letters(input):
             valids.append('+')
     return ''.join(valids)
 
+# TODO: see if we actually need the multithreding code when it happens above
 if __name__ == "__main__":
     p = Process(target=try_authentication, args=(authorization_header,))
     p.start()  

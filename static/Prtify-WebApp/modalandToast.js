@@ -5,6 +5,7 @@ function modalClicked(){
   $('#modal1').modal('open');
 }
 
+
 function toastClicked() {
     var $toastContent = $('<span>New Song Added!</span>').add($('<button class="btn-flat toast-action" onclick="scrollToBottom()">Scroll to Bottom</button>'));
     Materialize.toast($toastContent, 4000, 'rounded');

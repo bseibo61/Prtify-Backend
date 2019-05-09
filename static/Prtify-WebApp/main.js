@@ -2,20 +2,26 @@ var authDone = false;
 var party;
 
 firebase.auth().onAuthStateChanged(function(user) {
-  var isAnonymous = user.isAnonymous;
-  uid = user.uid;
-  var json = getJson();
-  found = false;
-  for (var u in json.users) {
-    if (u == uid) {
-      party = json.users[u].party;
-      found = true;
+  if(user){
+    console.log("CAN find user");
+    var isAnonymous = user.isAnonymous;
+    uid = user.uid;
+    var json = getJson();
+    found = false;
+    for (var u in json.users) {
+      if (u == uid) {
+        party = json.users[u].party;
+        found = true;
+      }
     }
+    if (!found) {
+      console.log("cant find party!");
+    }
+    authDone = true;
+  }else{
+    console.log("cant find user");
   }
-  // if (!found) {
-  //   window.location.assign('index.html');
-  // }
-  authDone = true;
+  
 });
 
 

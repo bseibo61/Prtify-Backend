@@ -8,7 +8,7 @@ firebase.auth().onAuthStateChanged(function(user) {
     json = getJson();
     for(var u in json.users){
       if(u == uid && json.users[u].party != null){
-        window.location.assign('main.html');
+        //window.location.assign('main.html');
       }
     }
   } else {
@@ -16,9 +16,39 @@ firebase.auth().onAuthStateChanged(function(user) {
   }
 });
 
+function makeNewPartyModal(){
+  $('#create-party-modal').modal('open');
+}
+
+function makeNewParty(){
+  var party = $('#createInput').val();
+  // Check if room name is available
+  var json = getJson();
+
+  var exists = false;
+  for(var p in json.parties){
+    if(party == p){
+      console.log("This room already exists");
+      exists = true;
+      $("#existingParty").show();
+    }
+    
+  }
+  if(!exists){
+    // Redirect to url/room/userid
+    console.log("Uid is: "+ uid);
+    window.location = "http://localhost:8080/" + "auth/" + encodeURIComponent(party) + "/" + uid;
+  }
+  
+}
+
+function joinPartyModal(){
+  $('#join-party-modal').modal('open');
+}
 
 function joinParty(){
-  var party = $("#partyName").val();
+  console.log("btn click");
+  var party = $("#joinInput").val();
   var json = getJson();
   var partyExists = false;
   for(var p in json.parties){
@@ -30,11 +60,10 @@ function joinParty(){
         uid: uid,
         party: party
       });
-      window.location.assign(main.html);
+      window.location = "main.html";
     }
   }
   $("#invalidParty").show();
-
 }
 
 //returns a JSON of the database using REST API
