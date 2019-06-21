@@ -24,6 +24,7 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 #  Client Keys
 CLIENT_ID = config.CLIENT_ID
 CLIENT_SECRET = config.CLIENT_SECRET
+CONFIG = config.config
 
 # Spotify URLS
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
@@ -174,6 +175,11 @@ def try_authentication(auth_header, pass_through_party, f):
         party = pass_through_party.value
     f()
 
+def requests_listener(event):
+    print("event type:",event.event_type)  # can be 'put' or 'patch'
+    print("event path",event.path)  # relative to the reference, it seems
+    print("event data",event.data)  # new data at /reference/event.path. None if deleted
+
 
 # removes other charactors from last fm for url query
 def letters(input):
@@ -188,27 +194,51 @@ def letters(input):
 # This should log into firebase and move songs from the requests to the queue
 # Right now it just checks if the request queue is populated every 5 seconds,
 # but it would be better if there was a firebase listener on the requests queue
+
+# def requests_to_queue():
+#     # Makes sure user is logged in
+#     while authorization_header.value == "":
+#         time.sleep(1)
+#         print(authorization_header.value)
+    
+#     try:
+#         # if requests has songs in it, add requests to queue
+#         from firebase import firebase
+#         global party
+#         firebase = firebase.FirebaseApplication('https://voteify.firebaseio.com/', None)
+#         requests = firebase.get('/parties/'+party+'/requests/pizza/', None)
+#         # TODO: requests gets the name and artest of the song to move to the queue.  Move it with spotify api.  Also this gets called every 5 seconds but a firebase listener would be better so figure that out
+#         print("REQUESTS TO QUEUE party:",party)
+#         print("requests to queue json",requests)
+#         time.sleep(5)
+#         requests_to_queue()
+
+#     except KeyboardInterrupt:
+#         print("KeyboardInterrupt")
+#         exit()
+
+#     print("requests to queue")
+
 def requests_to_queue():
     # Makes sure user is logged in
-    while authorization_header.value == "":
+    global party
+    from firebase import firebase
+    from firebase_admin import credentials, db
+    while authorization_header.value == "" or pass_through_party.value == "":
         time.sleep(1)
         print(authorization_header.value)
-    
-    try:
-        # if requests has songs in it, add requests to queue
-        from firebase import firebase
-        global party
-        firebase = firebase.FirebaseApplication('https://voteify.firebaseio.com/', None)
-        requests = firebase.get('/parties/'+party+'/requests/pizza/', None)
-        # TODO: requests gets the name and artest of the song to move to the queue.  Move it with spotify api.  Also this gets called every 5 seconds but a firebase listener would be better so figure that out
-        print("REQUESTS TO QUEUE party:",party)
-        print("requests to queue json",requests)
-        time.sleep(5)
-        requests_to_queue()
 
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt")
-        exit()
+    cred = credentials.Certificate('voteify-firebase-adminsdk-awpcw-d49b0a28ee.json')
+    default_app = firebase_admin.initialize_app(cred, {'databaseURL': 'https://voteify.firebaseio.com'})
+    # if requests has songs in it, add requests to queue
+    print("REQUESTS TO QUEUE party:",party)
+    
+    firebase = firebase.FirebaseApplication('https://voteify.firebaseio.com/', None)
+    firebase_admin.db.reference('/parties/'+party+'/').listen(requests_listener)
+    # TODO: requests gets the name and artest of the song to move to the queue.  Move it with spotify api.  Also this gets called every 5 seconds but a firebase listener would be better so figure that out
+    
+    print("requests to queue json",requests)
+
 
     print("requests to queue")
 
